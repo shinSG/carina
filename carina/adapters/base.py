@@ -21,6 +21,33 @@ class AdapterError(RuntimeError):
         self.status_code = status_code
 
 
+def is_retriable_error(exc: AdapterError) -> bool:
+    """Whether an error is transient and model-level fallback should be tried."""
+    code = exc.status_code
+    if code is None:
+        return True  # network/timeout — always retriable
+    return code in (408, 429, 500, 502, 503, 504)
+
+
+class ModelResolver:
+    """Resolves client model name to a provider-specific model name.
+
+    Resolution order:
+      1. ``provider.model_map[client_model]`` if present
+      2. ``provider.default_model`` if client model is None
+      3. ``"default"`` as last resort
+    """
+
+    def __init__(self, provider: ProviderProfile) -> None:
+        self._map = provider.model_map
+        self._default = provider.default_model
+
+    def resolve(self, client_model: str | None) -> str:
+        if client_model:
+            return self._map.get(client_model, client_model)
+        return self._default or "default"
+
+
 class ProviderAdapter(ABC):
     """Abstract base for all provider adapters."""
 
@@ -28,9 +55,16 @@ class ProviderAdapter(ABC):
 
     def __init__(self, provider: ProviderProfile) -> None:
         self.provider = provider
+        self.resolver = ModelResolver(provider)
 
     def _model(self, req: ChatRequest) -> str:
-        return req.model or self.provider.default_model or "default"
+        return self.resolver.resolve(req.model)
+
+    def _resolve_with_fallback(self, req: ChatRequest) -> list[str]:
+        """Return ordered list of provider models to try: primary + fallbacks."""
+        primary = self.resolver.resolve(req.model)
+        fallbacks = [m for m in self.provider.fallback_models if m != primary]
+        return [primary, *fallbacks]
 
     @abstractmethod
     async def forward(self, req: ChatRequest) -> ChatResponse:

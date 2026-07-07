@@ -5,10 +5,15 @@ __pycache__/
 .eggs/
 build/
 dist/
+dist-electron/
 
 # Virtual envs
 .venv/
 venv/
+
+# Node
+node_modules/
+package-lock.json
 
 # Tooling
 .pytest_cache/

@@ -45,10 +45,10 @@ class Router:
                 self._monitor.record_failure(provider.id, str(exc))
                 continue
             self._monitor.record_success(provider.id)
+            # Preserve the client's original model name in the response.
+            resp.model = req.model or resp.model
             return resp
-        raise NoProviderAvailableError(
-            f"all providers failed; last error: {last_error}"
-        )
+        raise NoProviderAvailableError(f"all providers failed; last error: {last_error}")
 
     async def stream(self, req: ChatRequest) -> tuple[ProviderProfile, AsyncIterator[str]]:
         """Return the chosen provider and a delta stream, failing over before first byte.
@@ -75,9 +75,7 @@ class Router:
                 continue
             self._monitor.record_success(provider.id)
             return provider, _prepend(first, agen)
-        raise NoProviderAvailableError(
-            f"all providers failed; last error: {last_error}"
-        )
+        raise NoProviderAvailableError(f"all providers failed; last error: {last_error}")
 
 
 async def _empty_stream() -> AsyncIterator[str]:

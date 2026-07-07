@@ -121,9 +121,7 @@ class ConfigStore:
     def delete_provider(self, provider_id: str) -> None:
         with self._lock:
             before = len(self._config.providers)
-            self._config.providers = [
-                p for p in self._config.providers if p.id != provider_id
-            ]
+            self._config.providers = [p for p in self._config.providers if p.id != provider_id]
             if len(self._config.providers) == before:
                 raise ProviderNotFoundError(provider_id)
             if self._config.active_id == provider_id:

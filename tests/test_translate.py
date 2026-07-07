@@ -52,7 +52,10 @@ def test_cross_protocol_openai_in_anthropic_out():
 
 def test_response_mapping_openai_and_anthropic():
     resp = ChatResponse(
-        model="m", content="hello", stop_reason="stop", usage=ChatUsage(prompt_tokens=3, completion_tokens=2)
+        model="m",
+        content="hello",
+        stop_reason="stop",
+        usage=ChatUsage(prompt_tokens=3, completion_tokens=2),
     )
     oai = translate.internal_to_openai_response(resp)
     assert oai["choices"][0]["message"]["content"] == "hello"

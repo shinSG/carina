@@ -41,6 +41,41 @@ function healthFor(records, id) {
   return (records || []).find((r) => r.provider_id === id) || {};
 }
 
+/** Parse "key=value" lines into an object. */
+function parseModelMap(text) {
+  const map = {};
+  for (const line of text.split("\n")) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    const eq = trimmed.indexOf("=");
+    if (eq < 1) continue;
+    map[trimmed.slice(0, eq).trim()] = trimmed.slice(eq + 1).trim();
+  }
+  return map;
+}
+
+/** Serialize object back to "key=value" lines. */
+function serializeModelMap(obj) {
+  if (!obj || typeof obj !== "object") return "";
+  return Object.entries(obj)
+    .map(([k, v]) => `${k}=${v}`)
+    .join("\n");
+}
+
+/** Parse comma-separated fallback models. */
+function parseFallbackModels(text) {
+  return text
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+/** Serialize array to comma-separated string. */
+function serializeFallbackModels(arr) {
+  if (!Array.isArray(arr)) return "";
+  return arr.join(", ");
+}
+
 async function render() {
   const [data, h] = await Promise.all([api.list(), api.health()]);
   const records = h.providers || [];
@@ -57,6 +92,21 @@ async function render() {
     el.className = "row";
     el.style.padding = "10px 0";
     el.style.borderTop = "1px solid #262a33";
+
+    // Build info line
+    let infoParts = [
+      `${escapeHtml(p.base_url)}`,
+      `model ${escapeHtml(p.default_model || "—")}`,
+      `prio ${p.priority}`,
+    ];
+    const mapKeys = p.model_map ? Object.keys(p.model_map) : [];
+    if (mapKeys.length) {
+      infoParts.push(`map: ${mapKeys.length} rule${mapKeys.length > 1 ? "s" : ""}`);
+    }
+    if (p.fallback_models && p.fallback_models.length) {
+      infoParts.push(`fallback: ${p.fallback_models.join(" → ")}`);
+    }
+
     el.innerHTML = `
       <div>
         <div class="row" style="gap:8px; justify-content:flex-start;">
@@ -65,7 +115,7 @@ async function render() {
           ${isActive ? '<span class="pill active">active</span>' : ""}
           <span class="pill ${hr.state || "closed"}">${hr.state || "unknown"}</span>
         </div>
-        <div class="muted">${escapeHtml(p.base_url)} · model ${escapeHtml(p.default_model || "—")} · prio ${p.priority}</div>
+        <div class="muted">${infoParts.join(" · ")}</div>
       </div>
       <div class="actions"></div>`;
     const actions = el.querySelector(".actions");
@@ -105,11 +155,13 @@ function editProvider(p) {
   $("f-default_model").value = p.default_model || "";
   $("f-api_key").value = "";
   $("f-priority").value = p.priority;
+  $("f-model_map").value = serializeModelMap(p.model_map);
+  $("f-fallback_models").value = serializeFallbackModels(p.fallback_models);
 }
 
 function resetForm() {
   $("form-title").textContent = "Add provider";
-  ["f-id", "f-name", "f-base_url", "f-default_model", "f-api_key"].forEach((i) => ($(i).value = ""));
+  ["f-id", "f-name", "f-base_url", "f-default_model", "f-api_key", "f-model_map", "f-fallback_models"].forEach((i) => ($(i).value = ""));
   $("f-protocol").value = "openai";
   $("f-priority").value = "100";
 }
@@ -122,6 +174,8 @@ async function save() {
     base_url: $("f-base_url").value.trim(),
     default_model: $("f-default_model").value.trim() || null,
     priority: Number($("f-priority").value) || 100,
+    model_map: parseModelMap($("f-model_map").value),
+    fallback_models: parseFallbackModels($("f-fallback_models").value),
   };
   const key = $("f-api_key").value;
   if (!body.name || !body.base_url) {

@@ -25,6 +25,10 @@ class ProviderProfile(BaseModel):
     enabled: bool = True
     priority: int = 100
     timeout_s: float = 60.0
+    model_map: dict[str, str] = Field(default_factory=dict)
+    """Client model name → provider model name. e.g. {"gpt-4o": "claude-sonnet-4-20250514"}."""
+    fallback_models: list[str] = Field(default_factory=list)
+    """Models to try in order when the primary model fails (retriable errors)."""
 
     def redacted(self) -> dict[str, Any]:
         """Return a dict safe for logging / API responses (no secret)."""
@@ -46,6 +50,8 @@ class ProviderCreate(BaseModel):
     enabled: bool = True
     priority: int = 100
     timeout_s: float = 60.0
+    model_map: dict[str, str] = Field(default_factory=dict)
+    fallback_models: list[str] = Field(default_factory=list)
 
 
 class ProviderUpdate(BaseModel):
@@ -60,6 +66,8 @@ class ProviderUpdate(BaseModel):
     enabled: bool | None = None
     priority: int | None = None
     timeout_s: float | None = None
+    model_map: dict[str, str] | None = None
+    fallback_models: list[str] | None = None
 
 
 class ProxyConfig(BaseModel):

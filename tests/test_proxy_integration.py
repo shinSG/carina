@@ -27,7 +27,9 @@ def _openai_handler(request: httpx.Request) -> httpx.Response:
             json={
                 "id": "up-1",
                 "model": "gpt-test",
-                "choices": [{"message": {"role": "assistant", "content": "Hello"}, "finish_reason": "stop"}],
+                "choices": [
+                    {"message": {"role": "assistant", "content": "Hello"}, "finish_reason": "stop"}
+                ],
                 "usage": {"prompt_tokens": 1, "completion_tokens": 1},
             },
         )
@@ -62,7 +64,9 @@ def test_anthropic_in_openai_provider_out(store, monkeypatch):
         ProviderCreate(name="p", protocol="openai", base_url="https://up/v1", api_key="sk")
     )
     client = _make_client(store, monkeypatch)
-    r = client.post("/v1/messages", json={"messages": [{"role": "user", "content": "hi"}], "max_tokens": 10})
+    r = client.post(
+        "/v1/messages", json={"messages": [{"role": "user", "content": "hi"}], "max_tokens": 10}
+    )
     assert r.status_code == 200
     body = r.json()
     assert body["type"] == "message"
@@ -75,7 +79,9 @@ def test_streaming(store, monkeypatch):
     )
     client = _make_client(store, monkeypatch)
     with client.stream(
-        "POST", "/v1/chat/completions", json={"messages": [{"role": "user", "content": "hi"}], "stream": True}
+        "POST",
+        "/v1/chat/completions",
+        json={"messages": [{"role": "user", "content": "hi"}], "stream": True},
     ) as r:
         text = "".join(chunk for chunk in r.iter_text())
     assert "Hel" in text and "lo" in text
@@ -111,7 +117,12 @@ def test_failover_to_backup(store, monkeypatch):
             return httpx.Response(
                 200,
                 json={
-                    "choices": [{"message": {"role": "assistant", "content": "from-good"}, "finish_reason": "stop"}],
+                    "choices": [
+                        {
+                            "message": {"role": "assistant", "content": "from-good"},
+                            "finish_reason": "stop",
+                        }
+                    ],
                     "usage": {},
                 },
             )
@@ -142,7 +153,9 @@ def test_api_key_never_logged(store, monkeypatch, caplog):
     )
     client = _make_client(store, monkeypatch)
     with caplog.at_level(logging.DEBUG):
-        r = client.post("/v1/chat/completions", json={"messages": [{"role": "user", "content": "hi"}]})
+        r = client.post(
+            "/v1/chat/completions", json={"messages": [{"role": "user", "content": "hi"}]}
+        )
     assert r.status_code == 200
     assert "sk-LEAKME" not in caplog.text
     # and not in control API responses

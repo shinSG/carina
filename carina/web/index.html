@@ -53,6 +53,8 @@
           <div><label>Default model</label><input id="f-default_model" placeholder="gpt-4o-mini" /></div>
           <div><label>API key</label><input id="f-api_key" type="password" placeholder="leave blank to keep existing" /></div>
           <div><label>Priority (lower = preferred)</label><input id="f-priority" type="number" value="100" /></div>
+          <div style="grid-column: 1 / -1;"><label>Model map (client model → provider model, one per line: gpt-4o=claude-sonnet-4-20250514)</label><textarea id="f-model_map" rows="3" style="background:#0f1115;color:#e6e6e6;border:1px solid #394150;border-radius:7px;padding:7px 9px;font-size:13px;width:100%;box-sizing:border-box;font-family:monospace;resize:vertical;"></textarea></div>
+          <div style="grid-column: 1 / -1;"><label>Fallback models (comma-separated, tried in order when primary fails)</label><input id="f-fallback_models" placeholder="claude-3-haiku-20240307, gpt-4o-mini" /></div>
         </div>
         <div class="actions" style="margin-top: 14px;">
           <button id="save">Save</button>
