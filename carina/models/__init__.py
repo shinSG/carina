@@ -10,6 +10,41 @@ from typing import Any, Literal
 from pydantic import BaseModel, Field
 
 Protocol = Literal["openai", "anthropic", "passthrough"]
+RoutingMode = Literal["manual", "rule", "adaptive"]
+
+
+class RoutingRule(BaseModel):
+    """A request matcher that narrows or prefers a group of providers."""
+
+    name: str
+    enabled: bool = True
+    model_patterns: list[str] = Field(default_factory=list)
+    stream: bool | None = None
+    provider_ids: list[str] = Field(default_factory=list)
+    require_tags: set[str] = Field(default_factory=set)
+    prefer_tags: set[str] = Field(default_factory=set)
+    strict: bool = False
+
+
+class RoutingWeights(BaseModel):
+    """Weights used by adaptive routing; values are normalized at scoring time."""
+
+    success_rate: float = Field(default=0.30, ge=0)
+    latency: float = Field(default=0.25, ge=0)
+    priority: float = Field(default=0.20, ge=0)
+    cost: float = Field(default=0.15, ge=0)
+    preference: float = Field(default=0.10, ge=0)
+
+
+class RoutingConfig(BaseModel):
+    """Persisted smart-routing settings."""
+
+    mode: RoutingMode = "manual"
+    rules: list[RoutingRule] = Field(default_factory=list)
+    weights: RoutingWeights = Field(default_factory=RoutingWeights)
+    latency_target_ms: float = Field(default=2000.0, gt=0)
+    ewma_alpha: float = Field(default=0.20, gt=0, le=1)
+    active_provider_bonus: float = Field(default=0.05, ge=0)
 
 
 class ProviderProfile(BaseModel):
@@ -25,6 +60,13 @@ class ProviderProfile(BaseModel):
     enabled: bool = True
     priority: int = 100
     timeout_s: float = 60.0
+    model_patterns: list[str] = Field(default_factory=list)
+    capabilities: set[str] = Field(default_factory=set)
+    tags: set[str] = Field(default_factory=set)
+    context_window: int | None = Field(default=None, gt=0)
+    max_output_tokens: int | None = Field(default=None, gt=0)
+    input_cost_per_million: float | None = Field(default=None, ge=0)
+    output_cost_per_million: float | None = Field(default=None, ge=0)
 
     def redacted(self) -> dict[str, Any]:
         """Return a dict safe for logging / API responses (no secret)."""
@@ -46,6 +88,13 @@ class ProviderCreate(BaseModel):
     enabled: bool = True
     priority: int = 100
     timeout_s: float = 60.0
+    model_patterns: list[str] = Field(default_factory=list)
+    capabilities: set[str] = Field(default_factory=set)
+    tags: set[str] = Field(default_factory=set)
+    context_window: int | None = Field(default=None, gt=0)
+    max_output_tokens: int | None = Field(default=None, gt=0)
+    input_cost_per_million: float | None = Field(default=None, ge=0)
+    output_cost_per_million: float | None = Field(default=None, ge=0)
 
 
 class ProviderUpdate(BaseModel):
@@ -60,6 +109,13 @@ class ProviderUpdate(BaseModel):
     enabled: bool | None = None
     priority: int | None = None
     timeout_s: float | None = None
+    model_patterns: list[str] | None = None
+    capabilities: set[str] | None = None
+    tags: set[str] | None = None
+    context_window: int | None = Field(default=None, gt=0)
+    max_output_tokens: int | None = Field(default=None, gt=0)
+    input_cost_per_million: float | None = Field(default=None, ge=0)
+    output_cost_per_million: float | None = Field(default=None, ge=0)
 
 
 class ProxyConfig(BaseModel):
@@ -68,6 +124,7 @@ class ProxyConfig(BaseModel):
     version: int = 1
     active_id: str | None = None
     providers: list[ProviderProfile] = Field(default_factory=list)
+    routing: RoutingConfig = Field(default_factory=RoutingConfig)
 
 
 # --- Internal normalized chat model (protocol-agnostic) -------------------
@@ -92,6 +149,15 @@ class ChatRequest(BaseModel):
     system: str | None = None
     max_tokens: int | None = None
     temperature: float | None = None
+    stream: bool = False
+
+
+class RoutingPreviewRequest(BaseModel):
+    """Small request shape accepted by the routing preview endpoint."""
+
+    model: str | None = None
+    messages: list[ChatMessage] = Field(default_factory=list)
+    max_tokens: int | None = None
     stream: bool = False
 
 

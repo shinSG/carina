@@ -18,6 +18,7 @@ from carina.models import (
     ProviderProfile,
     ProviderUpdate,
     ProxyConfig,
+    RoutingConfig,
 )
 
 
@@ -96,6 +97,10 @@ class ConfigStore:
                     return p.model_copy(deep=True)
             return None
 
+    def routing_config(self) -> RoutingConfig:
+        with self._lock:
+            return self._config.routing.model_copy(deep=True)
+
     # --- writes -----------------------------------------------------------
 
     def add_provider(self, payload: ProviderCreate) -> ProviderProfile:
@@ -121,9 +126,7 @@ class ConfigStore:
     def delete_provider(self, provider_id: str) -> None:
         with self._lock:
             before = len(self._config.providers)
-            self._config.providers = [
-                p for p in self._config.providers if p.id != provider_id
-            ]
+            self._config.providers = [p for p in self._config.providers if p.id != provider_id]
             if len(self._config.providers) == before:
                 raise ProviderNotFoundError(provider_id)
             if self._config.active_id == provider_id:
@@ -140,3 +143,9 @@ class ConfigStore:
                     self._save()
                     return p.model_copy(deep=True)
         raise ProviderNotFoundError(provider_id)
+
+    def set_routing_config(self, routing: RoutingConfig) -> RoutingConfig:
+        with self._lock:
+            self._config.routing = routing.model_copy(deep=True)
+            self._save()
+            return self._config.routing.model_copy(deep=True)

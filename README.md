@@ -1,5 +1,7 @@
 # carina
 
+[简体中文](README.zh-CN.md) | English
+
 A local model-service proxy with provider switching, format translation, and failover —
 inspired by [cc-switch](https://github.com/farion1231/cc-switch), implemented as a Python backend.
 
@@ -15,6 +17,7 @@ auto-failover, and per-provider circuit breakers.
 - SSE streaming on both endpoints
 - Provider profiles persisted as JSON (`~/.config/carina/config.json`), `0o600`, atomic writes + backup
 - One-click switch, health monitoring, auto-failover, circuit breaker
+- Smart routing modes: manual, rule-based, and adaptive success/latency/cost scoring
 - Minimal web UI at `/` and a REST control API under `/api`
 - API keys are never logged and are redacted from API responses
 
@@ -48,6 +51,27 @@ Open http://127.0.0.1:8787/ to manage providers, then send requests to the proxy
 | POST | `/api/providers/{id}/test` | Connectivity/credential check |
 | GET | `/api/active` | Current active provider |
 | GET | `/api/health` | Per-provider health + circuit state |
+| GET/PUT | `/api/routing/config` | Read or update routing mode, rules, and weights |
+| POST | `/api/routing/preview` | Explain candidate filtering and ranking for a request |
+| GET | `/api/routing/metrics` | Runtime success, latency, token, and cost metrics |
+
+Routing defaults to `manual`, preserving active-provider-first behavior. `rule` mode matches
+requests using model patterns and streaming, then filters or prefers providers by id and tags.
+`adaptive` adds live success rate, EWMA latency, configured priority, token price, and rule
+preference scoring. Runtime metrics are process-local and reset when carina restarts.
+
+See [Smart routing technical documentation](docs/smart-routing.md) for the complete routing,
+scoring, fallback, API, and operational semantics.
+
+Example rule:
+
+```json
+{
+  "name": "reasoning",
+  "model_patterns": ["o3*", "reasoning-*"],
+  "prefer_tags": ["reasoning"]
+}
+```
 
 ## Development
 

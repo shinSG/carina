@@ -5,7 +5,13 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException
 
 from carina.adapters import build_adapter
-from carina.models import ProviderCreate, ProviderUpdate
+from carina.models import (
+    ChatRequest,
+    ProviderCreate,
+    ProviderUpdate,
+    RoutingConfig,
+    RoutingPreviewRequest,
+)
 from carina.server import get_state
 from carina.store import ProviderNotFoundError
 
@@ -85,3 +91,24 @@ def get_active(state=Depends(get_state)):
 @router.get("/health")
 def get_health(state=Depends(get_state)):
     return {"providers": [r.model_dump(mode="json") for r in state.monitor.records()]}
+
+
+@router.get("/routing/config")
+def get_routing_config(state=Depends(get_state)):
+    return state.store.routing_config().model_dump(mode="json")
+
+
+@router.put("/routing/config")
+def update_routing_config(payload: RoutingConfig, state=Depends(get_state)):
+    return state.store.set_routing_config(payload).model_dump(mode="json")
+
+
+@router.get("/routing/metrics")
+def get_routing_metrics(state=Depends(get_state)):
+    return {"providers": state.router.metrics.records()}
+
+
+@router.post("/routing/preview")
+def preview_routing(payload: RoutingPreviewRequest, state=Depends(get_state)):
+    req = ChatRequest(**payload.model_dump())
+    return state.router.preview(req)

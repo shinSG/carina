@@ -20,7 +20,8 @@
       button { background: #2563eb; color: #fff; border: 0; border-radius: 7px; padding: 7px 12px; cursor: pointer; font-size: 13px; }
       button.secondary { background: #2b303b; } button.danger { background: #5b2330; }
       button:hover { filter: brightness(1.1); }
-      input, select { background: #0f1115; color: #e6e6e6; border: 1px solid #394150; border-radius: 7px; padding: 7px 9px; font-size: 13px; width: 100%; box-sizing: border-box; }
+      input, select, textarea { background: #0f1115; color: #e6e6e6; border: 1px solid #394150; border-radius: 7px; padding: 7px 9px; font-size: 13px; width: 100%; box-sizing: border-box; }
+      textarea { min-height: 120px; font-family: ui-monospace, monospace; resize: vertical; }
       label { display: block; font-size: 12px; color: #8a8f98; margin: 8px 0 3px; }
       .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; }
       .actions { display: flex; gap: 8px; }
@@ -38,6 +39,29 @@
         <div id="providers" class="muted">Loading…</div>
       </div>
       <div class="card">
+        <h2>Smart routing</h2>
+        <div class="grid">
+          <div>
+            <label>Mode</label>
+            <select id="r-mode">
+              <option value="manual">manual — active provider first</option>
+              <option value="rule">rule — request rules and priority</option>
+              <option value="adaptive">adaptive — rules and live scoring</option>
+            </select>
+          </div>
+          <div>
+            <label>Latency target (ms)</label>
+            <input id="r-latency" type="number" min="1" value="2000" />
+          </div>
+        </div>
+        <label>Rules (JSON array)</label>
+        <textarea id="r-rules" spellcheck="false">[]</textarea>
+        <div class="muted" style="margin-top:6px;">Rules match model_patterns and stream; they can use provider_ids, require_tags, prefer_tags, and strict.</div>
+        <div class="actions" style="margin-top: 14px;">
+          <button id="routing-save">Save routing</button>
+        </div>
+      </div>
+      <div class="card">
         <h2 id="form-title">Add provider</h2>
         <input type="hidden" id="f-id" />
         <div class="grid">
@@ -53,6 +77,13 @@
           <div><label>Default model</label><input id="f-default_model" placeholder="gpt-4o-mini" /></div>
           <div><label>API key</label><input id="f-api_key" type="password" placeholder="leave blank to keep existing" /></div>
           <div><label>Priority (lower = preferred)</label><input id="f-priority" type="number" value="100" /></div>
+          <div><label>Model patterns (comma separated)</label><input id="f-model_patterns" placeholder="gpt-*, o3" /></div>
+          <div><label>Tags (comma separated)</label><input id="f-tags" placeholder="fast, cheap" /></div>
+          <div><label>Capabilities</label><input id="f-capabilities" placeholder="streaming, tools" /></div>
+          <div><label>Context window</label><input id="f-context_window" type="number" min="1" /></div>
+          <div><label>Max output tokens</label><input id="f-max_output_tokens" type="number" min="1" /></div>
+          <div><label>Input cost / 1M tokens</label><input id="f-input_cost" type="number" min="0" step="0.01" /></div>
+          <div><label>Output cost / 1M tokens</label><input id="f-output_cost" type="number" min="0" step="0.01" /></div>
         </div>
         <div class="actions" style="margin-top: 14px;">
           <button id="save">Save</button>
