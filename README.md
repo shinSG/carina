@@ -18,6 +18,7 @@ auto-failover, and per-provider circuit breakers.
 - Provider profiles persisted as JSON (`~/.config/carina/config.json`), `0o600`, atomic writes + backup
 - One-click switch, health monitoring, auto-failover, circuit breaker
 - Smart routing modes: manual, rule-based, and adaptive success/latency/cost scoring
+- Web UI language switcher with English and Simplified Chinese support
 - Minimal web UI at `/` and a REST control API under `/api`
 - API keys are never logged and are redacted from API responses
 
@@ -30,6 +31,19 @@ carina          # or: python -m carina
 ```
 
 Open http://127.0.0.1:8787/ to manage providers, then send requests to the proxy endpoints.
+
+### Docker
+
+```bash
+docker build -t carina:local .
+docker run --rm -p 8787:8787 -v carina-data:/data carina:local
+```
+
+If Docker Hub is unavailable, override the base-image registry with
+`--build-arg BASE_IMAGE=<registry>/library/python:3.12-slim`.
+
+The container runs as a non-root user, listens on `0.0.0.0:8787`, and stores its persistent
+configuration in `/data/config.json`.
 
 ### Environment
 

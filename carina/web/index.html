@@ -10,6 +10,9 @@
       header { padding: 16px 24px; border-bottom: 1px solid #262a33; display: flex; align-items: baseline; gap: 12px; }
       header h1 { font-size: 18px; margin: 0; }
       header span { color: #8a8f98; font-size: 13px; }
+      .language-picker { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+      .language-picker label { margin: 0; white-space: nowrap; }
+      .language-picker select { width: auto; min-width: 118px; }
       main { max-width: 920px; margin: 0 auto; padding: 24px; }
       .card { background: #171a21; border: 1px solid #262a33; border-radius: 10px; padding: 16px; margin-bottom: 16px; }
       .row { display: flex; align-items: center; gap: 12px; justify-content: space-between; }
@@ -31,63 +34,70 @@
   <body>
     <header>
       <h1>carina</h1>
-      <span>local model-service proxy</span>
+      <span data-i18n="header.subtitle">local model-service proxy</span>
+      <div class="language-picker">
+        <label for="language" data-i18n="language.label">Language</label>
+        <select id="language">
+          <option value="en">English</option>
+          <option value="zh-CN">简体中文</option>
+        </select>
+      </div>
     </header>
     <main>
       <div class="card">
-        <h2>Providers</h2>
-        <div id="providers" class="muted">Loading…</div>
+        <h2 data-i18n="providers.title">Providers</h2>
+        <div id="providers" class="muted" data-i18n="common.loading">Loading…</div>
       </div>
       <div class="card">
-        <h2>Smart routing</h2>
+        <h2 data-i18n="routing.title">Smart routing</h2>
         <div class="grid">
           <div>
-            <label>Mode</label>
+            <label data-i18n="routing.mode">Mode</label>
             <select id="r-mode">
-              <option value="manual">manual — active provider first</option>
-              <option value="rule">rule — request rules and priority</option>
-              <option value="adaptive">adaptive — rules and live scoring</option>
+              <option value="manual" data-i18n="routing.modeManual">manual — active provider first</option>
+              <option value="rule" data-i18n="routing.modeRule">rule — request rules and priority</option>
+              <option value="adaptive" data-i18n="routing.modeAdaptive">adaptive — rules and live scoring</option>
             </select>
           </div>
           <div>
-            <label>Latency target (ms)</label>
+            <label data-i18n="routing.latencyTarget">Latency target (ms)</label>
             <input id="r-latency" type="number" min="1" value="2000" />
           </div>
         </div>
-        <label>Rules (JSON array)</label>
+        <label data-i18n="routing.rules">Rules (JSON array)</label>
         <textarea id="r-rules" spellcheck="false">[]</textarea>
-        <div class="muted" style="margin-top:6px;">Rules match model_patterns and stream; they can use provider_ids, require_tags, prefer_tags, and strict.</div>
+        <div class="muted" style="margin-top:6px;" data-i18n="routing.rulesHelp">Rules match model_patterns and stream; they can use provider_ids, require_tags, prefer_tags, and strict.</div>
         <div class="actions" style="margin-top: 14px;">
-          <button id="routing-save">Save routing</button>
+          <button id="routing-save" data-i18n="routing.save">Save routing</button>
         </div>
       </div>
       <div class="card">
-        <h2 id="form-title">Add provider</h2>
+        <h2 id="form-title" data-i18n="provider.addTitle">Add provider</h2>
         <input type="hidden" id="f-id" />
         <div class="grid">
-          <div><label>Name</label><input id="f-name" placeholder="My provider" /></div>
+          <div><label data-i18n="provider.name">Name</label><input id="f-name" placeholder="My provider" data-i18n-placeholder="provider.namePlaceholder" /></div>
           <div>
-            <label>Protocol</label>
+            <label data-i18n="provider.protocol">Protocol</label>
             <select id="f-protocol">
               <option value="openai">openai</option>
               <option value="anthropic">anthropic</option>
             </select>
           </div>
-          <div><label>Base URL</label><input id="f-base_url" placeholder="https://api.openai.com/v1" /></div>
-          <div><label>Default model</label><input id="f-default_model" placeholder="gpt-4o-mini" /></div>
-          <div><label>API key</label><input id="f-api_key" type="password" placeholder="leave blank to keep existing" /></div>
-          <div><label>Priority (lower = preferred)</label><input id="f-priority" type="number" value="100" /></div>
-          <div><label>Model patterns (comma separated)</label><input id="f-model_patterns" placeholder="gpt-*, o3" /></div>
-          <div><label>Tags (comma separated)</label><input id="f-tags" placeholder="fast, cheap" /></div>
-          <div><label>Capabilities</label><input id="f-capabilities" placeholder="streaming, tools" /></div>
-          <div><label>Context window</label><input id="f-context_window" type="number" min="1" /></div>
-          <div><label>Max output tokens</label><input id="f-max_output_tokens" type="number" min="1" /></div>
-          <div><label>Input cost / 1M tokens</label><input id="f-input_cost" type="number" min="0" step="0.01" /></div>
-          <div><label>Output cost / 1M tokens</label><input id="f-output_cost" type="number" min="0" step="0.01" /></div>
+          <div><label data-i18n="provider.baseUrl">Base URL</label><input id="f-base_url" placeholder="https://api.openai.com/v1" /></div>
+          <div><label data-i18n="provider.defaultModel">Default model</label><input id="f-default_model" placeholder="gpt-4o-mini" /></div>
+          <div><label data-i18n="provider.apiKey">API key</label><input id="f-api_key" type="password" placeholder="leave blank to keep existing" data-i18n-placeholder="provider.apiKeyPlaceholder" /></div>
+          <div><label data-i18n="provider.priority">Priority (lower = preferred)</label><input id="f-priority" type="number" value="100" /></div>
+          <div><label data-i18n="provider.modelPatterns">Model patterns (comma separated)</label><input id="f-model_patterns" placeholder="gpt-*, o3" /></div>
+          <div><label data-i18n="provider.tags">Tags (comma separated)</label><input id="f-tags" placeholder="fast, cheap" data-i18n-placeholder="provider.tagsPlaceholder" /></div>
+          <div><label data-i18n="provider.capabilities">Capabilities</label><input id="f-capabilities" placeholder="streaming, tools" /></div>
+          <div><label data-i18n="provider.contextWindow">Context window</label><input id="f-context_window" type="number" min="1" /></div>
+          <div><label data-i18n="provider.maxOutputTokens">Max output tokens</label><input id="f-max_output_tokens" type="number" min="1" /></div>
+          <div><label data-i18n="provider.inputCost">Input cost / 1M tokens</label><input id="f-input_cost" type="number" min="0" step="0.01" /></div>
+          <div><label data-i18n="provider.outputCost">Output cost / 1M tokens</label><input id="f-output_cost" type="number" min="0" step="0.01" /></div>
         </div>
         <div class="actions" style="margin-top: 14px;">
-          <button id="save">Save</button>
-          <button id="reset" class="secondary">Clear</button>
+          <button id="save" data-i18n="common.save">Save</button>
+          <button id="reset" class="secondary" data-i18n="common.clear">Clear</button>
         </div>
       </div>
     </main>

@@ -15,6 +15,7 @@ carina 是一个本地模型服务代理，提供供应商切换、协议转换�
 - 配置文件权限为 `0o600`，采用原子写入并保留备份
 - 一键切换供应商、健康监控、自动故障转移和熔断器
 - 支持 manual、rule 和 adaptive 三种智能路由模式
+- Web 管理界面支持英文与简体中文切换，并记住语言选择
 - 提供本地 Web 管理界面和 `/api` 控制接口
 - API Key 不写入日志，并在 API 响应中脱敏
 
@@ -28,6 +29,18 @@ carina  # 也可以使用 python -m carina
 ```
 
 打开 [http://127.0.0.1:8787/](http://127.0.0.1:8787/) 管理供应商，然后将客户端请求发送到 carina 的代理接口。
+
+### Docker
+
+```bash
+docker build -t carina:local .
+docker run --rm -p 8787:8787 -v carina-data:/data carina:local
+```
+
+如果无法访问 Docker Hub，可以通过
+`--build-arg BASE_IMAGE=<镜像仓库>/library/python:3.12-slim` 指定其他基础镜像仓库。
+
+容器使用非 root 用户运行，监听 `0.0.0.0:8787`，并将持久化配置保存到 `/data/config.json`。
 
 ## 环境变量
 
